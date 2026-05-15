@@ -8,7 +8,8 @@
 
 <!-- LIVE TYPING BADGE -->
 <a href="https://github.com/Asad-Aziz-001">
-  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=22&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=🩺+Skin+Disease+Detection+using+BiT+Model;🔬+31+Diseases+%7C+94%25+Accuracy;⚡+Real-time+Analysis+%3C+3+Seconds;🚀+Deployed+on+Hugging+Face+Spaces" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=22&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Skin+Disease+Detection+using+BiT+Model;31+Diseases+%7C+94%25+Accuracy;Real-time+Analysis+%3C+3+Seconds;Deployed+on+Hugging+Face+Spaces" 
+       alt="Typing SVG" />
 </a>
 
 <br/><br/>
