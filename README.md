@@ -7,7 +7,7 @@
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=DermaScan%20AI&fontSize=60&fontColor=fff&animation=twinkling&fontAlignY=35&desc=AI-Powered%20Skin%20Disease%20Detection%20System&descAlignY=58&descSize=18" width="100%"/>
 
 <!-- LIVE TYPING BADGE -->
-<a href="https://github.com/Asad-Aziz-001">
+<a href="https://asad-aziz-skin-disease-detection.hf.space/">
   <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=22&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Skin+Disease+Detection+using+BiT+Model;31+Diseases+%7C+94%25+Accuracy;Real-time+Analysis+%3C+3+Seconds;Deployed+on+Hugging+Face+Spaces" 
        alt="Typing SVG" />
 </a>
@@ -31,7 +31,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![HuggingFace Spaces](https://img.shields.io/badge/🤗%20Deployed-HF%20Spaces-FF6B35?style=for-the-badge)](https://huggingface.co/spaces)
 [![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
-
+[![Live Demo](https://img.shields.io/badge/🚀-Live_Demo_on_HuggingFace-blue?style=for-the-badge)](https://asad-aziz-skin-disease-detection.hf.space/)
 <br/>
 
 ![GitHub Stars](https://img.shields.io/github/stars/Asad-Aziz-001/dermascan-ai?style=social)
