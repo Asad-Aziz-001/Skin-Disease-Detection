@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DermaScan AI</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩺</text></svg>">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --mint: #E8F7F2;
+            --mint-5: #1F8C68;
+            --mint-6: #0F6347;
+            --cream: #FAFAF7;
+            --text-dark: #1A2420;
+            --text-light: #6B867C;
+            --white: #FFFFFF;
+            --border: rgba(30, 80, 60, 0.1);
+            --shadow-md: 0 8px 40px rgba(15, 99, 71, 0.12);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--mint) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: var(--white);
+            border-radius: 32px;
+            box-shadow: var(--shadow-md);
+            max-width: 450px;
+            width: 100%;
+            padding: 40px;
+            border: 1px solid var(--border);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: var(--text-dark);
+        }
+
+        .logo span {
+            color: var(--mint-5);
+        }
+
+        .logo p {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--mint-5);
+            box-shadow: 0 0 0 3px rgba(31, 140, 104, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--mint-5);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-login:hover {
+            background: var(--mint-6);
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .signup-link a {
+            color: var(--mint-5);
+            text-decoration: none;
+        }
+
+        .error {
+            background: #FEF2F0;
+            color: #D93C1E;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>Derma<span>Scan</span> AI</h1>
+            <p>Login to your account</p>
+        </div>
+        <div id="message"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Username or Email</label>
+                <input type="text" id="username" required placeholder="Enter username or email">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required placeholder="Enter password">
+            </div>
+            <button type="submit" class="btn-login">Login</button>
+        </form>
+        <div class="signup-link">
+            Don't have an account? <a href="/signup">Sign up</a>
+        </div>
+    </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    localStorage.setItem('session_token', result.session_token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    window.location.href = '/dashboard';
+                } else {
+                    document.getElementById('message').innerHTML = `<div class="error">❌ ${result.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+
+</html>

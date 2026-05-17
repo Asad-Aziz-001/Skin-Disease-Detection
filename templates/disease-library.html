@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DermaScan AI — Disease Library</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩺</text></svg>">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --mint: #E8F7F2;
+            --mint-2: #C2EAD9;
+            --mint-3: #8DD4B8;
+            --mint-4: #3DAF87;
+            --mint-5: #1F8C68;
+            --mint-6: #0F6347;
+            --peach: #FDF0EA;
+            --peach-2: #F9CFBA;
+            --peach-3: #E8956E;
+            --cream: #FAFAF7;
+            --warm-gray: #F2F0EB;
+            --text-dark: #1A2420;
+            --text-mid: #3D5249;
+            --text-light: #6B867C;
+            --white: #FFFFFF;
+            --border: rgba(30, 80, 60, 0.1);
+            --shadow: 0 2px 20px rgba(15, 99, 71, 0.08);
+            --shadow-md: 0 8px 40px rgba(15, 99, 71, 0.12);
+            --shadow-lg: 0 20px 60px rgba(15, 99, 71, 0.15);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--mint) 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--cream);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--mint-3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--mint-5);
+        }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(250, 250, 247, 0.98);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 6%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--mint-5), var(--mint-4));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(31, 140, 104, 0.3);
+        }
+
+        .nav-logo-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: -0.02em;
+        }
+
+        .nav-logo-text span {
+            color: var(--mint-5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-mid);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--mint-5);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-nav-ghost {
+            padding: 9px 20px;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            color: var(--text-mid);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-nav-ghost:hover {
+            border-color: var(--mint-3);
+            color: var(--mint-5);
+            background: var(--mint);
+        }
+
+        .btn-nav-primary {
+            padding: 9px 22px;
+            border-radius: 50px;
+            background: var(--mint-5);
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(31, 140, 104, 0.3);
+        }
+
+        .btn-nav-primary:hover {
+            background: var(--mint-6);
+            transform: translateY(-2px);
+        }
+
+        /* MAIN CONTAINER */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 6% 60px;
+        }
+
+        /* HEADER */
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            border: 1px solid var(--mint-3);
+            color: var(--mint-6);
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 7px 16px;
+            border-radius: 50px;
+            margin-bottom: 1.5rem;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--mint-4);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.6;
+            }
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+
+        .page-title em {
+            font-style: italic;
+            color: var(--mint-5);
+        }
+
+        .page-desc {
+            font-size: 1rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* SEARCH & FILTER */
+        .search-section {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px 14px 45px;
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            background: var(--white);
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--mint-5);
+            box-shadow: 0 0 0 3px rgba(31, 140, 104, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            background: var(--white);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--mint-3);
+            background: var(--mint);
+        }
+
+        .filter-btn.active {
+            background: var(--mint-5);
+            color: white;
+            border-color: var(--mint-5);
+        }
+
+        .result-count {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* DISEASES GRID */
+        .diseases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .disease-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .disease-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--mint-5), var(--mint-3));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .disease-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--mint-3);
+        }
+
+        .disease-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .disease-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .disease-icon {
+            width: 55px;
+            height: 55px;
+            background: var(--mint);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .disease-name {
+            flex: 1;
+        }
+
+        .disease-name h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .disease-category {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            display: inline-block;
+            background: var(--cream);
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .disease-description {
+            font-size: 0.85rem;
+            color: var(--text-mid);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .disease-symptoms {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .symptom-tag {
+            background: var(--cream);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: var(--text-mid);
+        }
+
+        .disease-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .disease-accuracy {
+            background: var(--mint);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--mint-6);
+        }
+
+        .disease-severity {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+        }
+
+        .severity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .severity-high {
+            background: #E74C3C;
+        }
+
+        .severity-medium {
+            background: #F39C12;
+        }
+
+        .severity-mild {
+            background: #27AE60;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 32px;
+            padding: 2rem;
+            max-width: 550px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--mint);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .modal-text {
+            font-size: 0.85rem;
+            color: var(--text-mid);
+            line-height: 1.6;
+        }
+
+        .modal-symptoms {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        /* BACK LINK */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--mint-5);
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            color: var(--mint-6);
+        }
+
+        @media (max-width: 768px) {
+            .diseases-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-section {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .search-box {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <a href="/dashboard" class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+                    <path d="M8 12s1-2 4-2 4 2 4 2" />
+                    <circle cx="9" cy="9" r="1" fill="white" stroke="none" />
+                    <circle cx="15" cy="9" r="1" fill="white" stroke="none" />
+                </svg>
+            </div>
+            <span class="nav-logo-text">Derma<span>Scan</span> AI</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/detection">Upload</a></li>
+            <li><a href="/url-detection">URL</a></li>
+            <li><a href="/history">History</a></li>
+            <li><a href="/disease-library">Diseases</a></li>
+        </ul>
+        <div class="nav-actions">
+            <a href="/detection" class="btn-nav-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="margin-right: 6px;">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                </svg>
+                New Analysis
+            </a>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-container">
+        <a href="/dashboard" class="back-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <div class="page-header">
+            <div class="page-badge">
+                <span class="live-dot"></span>
+                31 Skin Diseases · AI Detection Ready
+            </div>
+            <h1 class="page-title">Disease <em>Library</em></h1>
+            <p class="page-desc">Explore all 31 skin conditions that our AI model can detect with high accuracy</p>
+        </div>
+
+        <!-- SEARCH & FILTER -->
+        <div class="search-section">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search by disease name...">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All (31)</button>
+                <button class="filter-btn" data-filter="cancer">Skin Cancer</button>
+                <button class="filter-btn" data-filter="infection">Infectious</button>
+                <button class="filter-btn" data-filter="genetic">Genetic</button>
+                <button class="filter-btn" data-filter="inflammatory">Inflammatory</button>
+            </div>
+        </div>
+        <div class="result-count" id="resultCount">Showing 31 diseases</div>
+
+        <!-- DISEASES GRID -->
+        <div class="diseases-grid" id="diseasesGrid"></div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="diseaseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon" id="modalIcon">🩺</div>
+                <h2 class="modal-title" id="modalTitle"></h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-section">
+                <div class="modal-section-title">📋 Description</div>
+                <div class="modal-text" id="modalDescription"></div>
+            </div>
+            <div class="modal-section">
+                <div class="modal-section-title">⚠️ Common Symptoms</div>
+                <div class="modal-symptoms" id="modalSymptoms"></div>
+            </div>
+            <div class="modal-section">
+                <div class="modal-section-title">🎯 AI Detection Info</div>
+                <div class="modal-text" id="modalAccuracy"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Complete 31 Skin Diseases Dataset
+        const diseases = [
+            // Cancerous
+            { name: "Basal Cell Carcinoma", category: "cancer", icon: "⚠️", severity: "high", accuracy: "94%", description: "Most common form of skin cancer. Develops in basal cells of the skin's outermost layer, usually caused by long-term sun exposure.", symptoms: ["Pearl-like bump", "Pink growth", "Open sore", "Shiny nodule", "Visible blood vessels"] },
+            { name: "Melanoma", category: "cancer", icon: "⚫", severity: "high", accuracy: "94%", description: "Most dangerous form of skin cancer. Develops in melanocytes (pigment-producing cells). Early detection significantly improves survival rates.", symptoms: ["Asymmetrical mole", "Irregular border", "Color variation", "Large diameter", "Evolving shape"] },
+            { name: "Squamous Cell Carcinoma", category: "cancer", icon: "🔴", severity: "high", accuracy: "93%", description: "Second most common skin cancer. Develops in squamous cells of the skin's upper layers.", symptoms: ["Red, scaly patch", "Open sore", "Wart-like growth", "Raised bump", "Crusting area"] },
+
+            // Infectious
+            { name: "Herpes Simplex", category: "infection", icon: "🦠", severity: "medium", accuracy: "92%", description: "Viral infection causing painful blisters on lips, mouth, or genital areas. Caused by HSV-1 or HSV-2 virus.", symptoms: ["Painful blisters", "Itching or burning", "Fluid-filled sores", "Crusting lesions", "Fever during outbreak"] },
+            { name: "Impetigo", category: "infection", icon: "🟡", severity: "mild", accuracy: "95%", description: "Highly contagious bacterial skin infection common in children. Causes red sores that break open and form honey-colored crusts.", symptoms: ["Red sores", "Honey-colored crust", "Blisters", "Itching", "Swollen lymph nodes"] },
+            { name: "Larva Migrans", category: "infection", icon: "🐛", severity: "medium", accuracy: "91%", description: "Cutaneous condition caused by hookworm larvae migration under the skin. Common in tropical regions.", symptoms: ["Serpiginous tracks", "Intense itching", "Red raised lines", "Moving sensation", "Secondary infection"] },
+            { name: "Leprosy Borderline", category: "infection", icon: "🔬", severity: "high", accuracy: "90%", description: "Intermediate form of Hansen's disease with features between tuberculoid and lepromatous types.", symptoms: ["Skin patches", "Numbness", "Muscle weakness", "Skin lesions", "Nerve thickening"] },
+            { name: "Leprosy Lepromatous", category: "infection", icon: "🔬", severity: "high", accuracy: "91%", description: "Severe form of Hansen's disease affecting skin, nerves, and internal organs with widespread lesions.", symptoms: ["Widespread nodules", "Thickened skin", "Nasal congestion", "Eye problems", "Hair loss"] },
+            { name: "Leprosy Tuberculoid", category: "infection", icon: "🔬", severity: "medium", accuracy: "92%", description: "Milder form of Hansen's disease with few well-defined skin patches and nerve involvement.", symptoms: ["One or few patches", "Numbness", "Enlarged nerves", "Loss of sweating", "Hypopigmented spots"] },
+            { name: "Tinea (Ringworm)", category: "infection", icon: "🍄", severity: "mild", accuracy: "93%", description: "Fungal infection causing ring-shaped, red, scaly patches on skin. Contagious through direct contact.", symptoms: ["Ring-shaped rash", "Itching", "Scaly patches", "Redness", "Burning sensation"] },
+            { name: "Candidiasis", category: "infection", icon: "🍄", severity: "mild", accuracy: "92%", description: "Yeast infection affecting skin folds, mouth, or genitals. Caused by Candida fungus overgrowth.", symptoms: ["Red rash", "Itching", "White patches", "Cracking skin", "Burning sensation"] },
+
+            // Genetic
+            { name: "Darier's Disease", category: "genetic", icon: "🧬", severity: "medium", accuracy: "89%", description: "Genetic disorder causing greasy, warty bumps on skin. Also known as keratosis follicularis.", symptoms: ["Greasy bumps", "Warty papules", "Nail abnormalities", "White lines on skin", "Foul odor"] },
+            { name: "Hailey-Hailey Disease", category: "genetic", icon: "🧬", severity: "medium", accuracy: "88%", description: "Rare genetic blistering disorder affecting skin folds, causing painful blisters and erosions.", symptoms: ["Blisters in skin folds", "Cracking skin", "Itching", "Burning sensation", "Recurrent outbreaks"] },
+            { name: "Epidermolysis Bullosa Pruriginosa", category: "genetic", icon: "🧬", severity: "medium", accuracy: "87%", description: "Rare inherited blistering disorder with intense itching and scarring, often affecting shins and forearms.", symptoms: ["Intense itching", "Blisters", "Scarring", "Nail dystrophy", "White bumps"] },
+            { name: "Psoriasis", category: "genetic", icon: "🔴", severity: "medium", accuracy: "93%", description: "Autoimmune condition causing rapid skin cell buildup, forming thick, silvery scales and red patches.", symptoms: ["Red patches", "Silvery scales", "Dry cracked skin", "Itching", "Joint pain"] },
+            { name: "Vitiligo", category: "genetic", icon: "⚪", severity: "mild", accuracy: "96%", description: "Condition where melanocytes are destroyed, causing patchy loss of skin pigmentation across body areas.", symptoms: ["White patches", "Premature graying", "Loss of eye color", "Symmetrical patterns", "Sun sensitivity"] },
+
+            // Inflammatory
+            { name: "Eczema (Atopic Dermatitis)", category: "inflammatory", icon: "🔴", severity: "mild", accuracy: "95%", description: "Chronic inflammatory condition causing itchy, red, swollen and cracked skin. Common in all age groups.", symptoms: ["Itchy skin", "Red patches", "Dry scaly skin", "Swelling", "Cracking"] },
+            { name: "Rosacea", category: "inflammatory", icon: "🟡", severity: "mild", accuracy: "91%", description: "Chronic condition causing persistent redness, visible blood vessels and bumps. Primarily affects the face.", symptoms: ["Facial redness", "Visible blood vessels", "Red bumps", "Eye irritation", "Burning sensation"] },
+            { name: "Acne Vulgaris", category: "inflammatory", icon: "🟢", severity: "mild", accuracy: "97%", description: "Common skin condition causing pimples, blackheads and cysts. Affects up to 85% of people aged 12-24.", symptoms: ["Whiteheads", "Blackheads", "Papules", "Pustules", "Cysts"] },
+            { name: "Contact Dermatitis", category: "inflammatory", icon: "🟠", severity: "mild", accuracy: "94%", description: "Skin reaction from contact with allergens or irritants, causing red, itchy rash.", symptoms: ["Red rash", "Itching", "Blisters", "Swelling", "Dry cracked skin"] },
+            { name: "Seborrheic Dermatitis", category: "inflammatory", icon: "🟤", severity: "mild", accuracy: "93%", description: "Common chronic condition causing scaly patches, red skin and stubborn dandruff on oily areas.", symptoms: ["Dandruff", "Scaly patches", "Redness", "Itching", "Oily skin"] },
+            { name: "Urticaria (Hives)", category: "inflammatory", icon: "🟣", severity: "mild", accuracy: "92%", description: "Skin rash triggered by allergic reactions, causing raised, itchy welts.", symptoms: ["Raised welts", "Intense itching", "Redness", "Swelling", "Burning sensation"] },
+            { name: "Lichen Planus", category: "inflammatory", icon: "🟣", severity: "medium", accuracy: "90%", description: "Inflammatory condition causing purple, itchy, flat-topped bumps on skin and mucous membranes.", symptoms: ["Purple bumps", "Itching", "White streaks", "Nail ridges", "Mouth sores"] },
+
+            // Other conditions
+            { name: "Alopecia Areata", category: "inflammatory", icon: "💇", severity: "medium", accuracy: "91%", description: "Autoimmune condition causing patchy hair loss on scalp and other body areas.", symptoms: ["Patchy hair loss", "Nail pitting", "Exclamation mark hairs", "Complete scalp loss", "Body hair loss"] },
+            { name: "Keloid", category: "inflammatory", icon: "📈", severity: "mild", accuracy: "90%", description: "Overgrowth of scar tissue that extends beyond original wound boundaries.", symptoms: ["Raised scar", "Itching", "Pain", "Smooth surface", "Dark coloration"] },
+            { name: "Molluscum Contagiosum", category: "infection", icon: "⚪", severity: "mild", accuracy: "91%", description: "Viral skin infection causing small, raised, pearl-like bumps on skin.", symptoms: ["Small bumps", "Dimpled center", "Pink or flesh color", "Itching", "Clustered lesions"] },
+            { name: "Scabies", category: "infection", icon: "🕷️", severity: "medium", accuracy: "92%", description: "Contagious skin condition caused by tiny mites that burrow into skin.", symptoms: ["Intense itching", "Pimple-like rash", "Burrow tracks", "Sores from scratching", "Nighttime itching"] },
+            { name: "Warts", category: "infection", icon: "🦠", severity: "mild", accuracy: "94%", description: "Small, rough growths caused by human papillomavirus (HPV) infection.", symptoms: ["Rough bumps", "Cauliflower appearance", "Black dots", "Pain when pressed", "Clustered growth"] },
+            { name: "Callus", category: "inflammatory", icon: "🦶", severity: "mild", accuracy: "96%", description: "Thickened skin area from repeated friction or pressure.", symptoms: ["Thickened skin", "Yellowish color", "Hard surface", "Less sensation", "Cracking"] },
+            { name: "Corns", category: "inflammatory", icon: "🦶", severity: "mild", accuracy: "95%", description: "Small, thickened areas of skin with a central core, usually on feet.", symptoms: ["Small round bump", "Hard center", "Pain when walking", "Thickened skin", "Tenderness"] }
+        ];
+
+        let currentFilter = "all";
+        let currentSearch = "";
+
+        function renderDiseases() {
+            let filtered = diseases;
+
+            // Apply category filter
+            if (currentFilter !== "all") {
+                filtered = filtered.filter(d => d.category === currentFilter);
+            }
+
+            // Apply search filter
+            if (currentSearch) {
+                filtered = filtered.filter(d =>
+                    d.name.toLowerCase().includes(currentSearch.toLowerCase()) ||
+                    d.description.toLowerCase().includes(currentSearch.toLowerCase())
+                );
+            }
+
+            // Update result count
+            document.getElementById('resultCount').innerHTML = `Showing ${filtered.length} of ${diseases.length} diseases`;
+
+            // Render grid
+            const grid = document.getElementById('diseasesGrid');
+            grid.innerHTML = filtered.map((disease, index) => `
+      <div class="disease-card" onclick="showDiseaseDetail(${diseases.indexOf(disease)})">
+        <div class="disease-header">
+          <div class="disease-icon">${disease.icon}</div>
+          <div class="disease-name">
+            <h3>${escapeHtml(disease.name)}</h3>
+            <span class="disease-category">${getCategoryLabel(disease.category)}</span>
+          </div>
+        </div>
+        <div class="disease-description">
+          ${escapeHtml(disease.description.substring(0, 100))}${disease.description.length > 100 ? '...' : ''}
+        </div>
+        <div class="disease-symptoms">
+          ${disease.symptoms.slice(0, 3).map(s => `<span class="symptom-tag">${escapeHtml(s)}</span>`).join('')}
+        </div>
+        <div class="disease-footer">
+          <span class="disease-accuracy">🎯 ${disease.accuracy} Accuracy</span>
+          <span class="disease-severity">
+            <span class="severity-dot severity-${disease.severity}"></span>
+            ${getSeverityLabel(disease.severity)}
+          </span>
+        </div>
+      </div>
+    `).join('');
+        }
+
+        function showDiseaseDetail(index) {
+            const disease = diseases[index];
+            document.getElementById('modalIcon').innerHTML = disease.icon;
+            document.getElementById('modalTitle').innerHTML = escapeHtml(disease.name);
+            document.getElementById('modalDescription').innerHTML = escapeHtml(disease.description);
+
+            const symptomsHtml = disease.symptoms.map(s =>
+                `<span class="symptom-tag">${escapeHtml(s)}</span>`
+            ).join('');
+            document.getElementById('modalSymptoms').innerHTML = symptomsHtml;
+
+            document.getElementById('modalAccuracy').innerHTML = `
+      <strong>Detection Accuracy:</strong> ${disease.accuracy}<br>
+      <strong>Category:</strong> ${getCategoryLabel(disease.category)}<br>
+      <strong>Severity:</strong> ${getSeverityLabel(disease.severity)}<br>
+      <strong>AI Model:</strong> Google BiT (31 disease classes)
+    `;
+
+            document.getElementById('diseaseModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('diseaseModal').style.display = 'none';
+        }
+
+        function getCategoryLabel(category) {
+            const labels = {
+                cancer: "🩺 Skin Cancer",
+                infection: "🦠 Infectious",
+                genetic: "🧬 Genetic",
+                inflammatory: "🔥 Inflammatory"
+            };
+            return labels[category] || category;
+        }
+
+        function getSeverityLabel(severity) {
+            const labels = {
+                high: "High Severity",
+                medium: "Medium Severity",
+                mild: "Mild Condition"
+            };
+            return labels[severity] || severity;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            currentSearch = e.target.value;
+            renderDiseases();
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderDiseases();
+            });
+        });
+
+        // Close modal on outside click
+        window.onclick = function (event) {
+            const modal = document.getElementById('diseaseModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Initial render
+        renderDiseases();
+    </script>
+</body>
+
+</html>

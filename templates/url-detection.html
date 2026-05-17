@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DermaScan AI — URL Based Skin Disease Detection</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩺</text></svg>">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --mint: #E8F7F2;
+            --mint-2: #C2EAD9;
+            --mint-3: #8DD4B8;
+            --mint-4: #3DAF87;
+            --mint-5: #1F8C68;
+            --mint-6: #0F6347;
+            --peach: #FDF0EA;
+            --peach-2: #F9CFBA;
+            --peach-3: #E8956E;
+            --cream: #FAFAF7;
+            --warm-gray: #F2F0EB;
+            --text-dark: #1A2420;
+            --text-mid: #3D5249;
+            --text-light: #6B867C;
+            --white: #FFFFFF;
+            --border: rgba(30, 80, 60, 0.1);
+            --shadow: 0 2px 20px rgba(15, 99, 71, 0.08);
+            --shadow-md: 0 8px 40px rgba(15, 99, 71, 0.12);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--mint) 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR STYLES */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            padding: 30px 20px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--mint-5), var(--mint-4));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-logo-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .sidebar-logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .sidebar-logo-text span {
+            color: var(--mint-5);
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--text-mid);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--mint);
+            color: var(--mint-5);
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--mint-5), var(--mint-4));
+            color: white;
+            box-shadow: 0 4px 12px rgba(31, 140, 104, 0.3);
+        }
+
+        .nav-item.active svg {
+            stroke: white;
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+        }
+
+        .nav-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: currentColor;
+            stroke-width: 1.8;
+        }
+
+        .logout-item {
+            margin-top: 40px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        .logout-item .nav-item {
+            color: #D93C1E;
+        }
+
+        .logout-item .nav-item:hover {
+            background: #FEF2F0;
+            color: #D93C1E;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px 40px;
+        }
+
+        /* PAGE HEADER */
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            border: 1px solid var(--mint-3);
+            color: var(--mint-6);
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 7px 16px;
+            border-radius: 50px;
+            margin-bottom: 1.5rem;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--mint-4);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.6;
+            }
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+
+        .page-title em {
+            font-style: italic;
+            color: var(--mint-5);
+        }
+
+        .page-desc {
+            font-size: 1rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* DETECTION GRID */
+        .detection-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        /* URL SECTION */
+        .url-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title svg {
+            color: var(--mint-5);
+        }
+
+        .url-input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .url-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            background: var(--cream);
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--mint-5);
+            box-shadow: 0 0 0 3px rgba(31, 140, 104, 0.1);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--mint-5);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            background: var(--mint-6);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            color: var(--text-mid);
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 400;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--mint-3);
+            color: var(--mint-5);
+        }
+
+        /* Sample URLs */
+        .sample-urls {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .sample-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-mid);
+            margin-bottom: 0.75rem;
+        }
+
+        .sample-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .sample-badge {
+            background: var(--mint);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: var(--mint-6);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .sample-badge:hover {
+            background: var(--mint-5);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .preview-container {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* RESULTS SECTION */
+        .results-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .results-placeholder {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-light);
+        }
+
+        .results-placeholder svg {
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .result-primary {
+            background: linear-gradient(135deg, var(--mint) 0%, var(--white) 100%);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--mint-3);
+        }
+
+        .result-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--mint-6);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-diagnosis {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+
+        .confidence-bar {
+            background: var(--warm-gray);
+            border-radius: 12px;
+            height: 12px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .confidence-fill {
+            background: linear-gradient(90deg, var(--mint-5), var(--mint-3));
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.5s ease;
+        }
+
+        .confidence-text {
+            font-size: 0.85rem;
+            color: var(--text-mid);
+            text-align: right;
+        }
+
+        .viz-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .viz-card {
+            background: var(--cream);
+            border-radius: 16px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .viz-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-mid);
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 180px;
+        }
+
+        canvas {
+            max-height: 160px;
+            width: 100%;
+        }
+
+        .top5-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .top5-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .top5-name {
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.85rem;
+        }
+
+        .top5-confidence {
+            background: var(--mint);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--mint-6);
+        }
+
+        .info-card {
+            background: var(--cream);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .info-text {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .spinner {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner-circle {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--mint-2);
+            border-top-color: var(--mint-5);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-error {
+            background: #FEF2F0;
+            border: 1px solid #FCD8D4;
+            color: #D93C1E;
+        }
+
+        .alert-success {
+            background: var(--mint);
+            border: 1px solid var(--mint-3);
+            color: var(--mint-6);
+        }
+
+        @media (max-width: 900px) {
+            .detection-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .viz-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                width: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <a href="/dashboard" class="sidebar-logo">
+                <div class="sidebar-logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+                        <path d="M8 12s1.5 2 4 2 4-2 4-2" />
+                        <circle cx="9" cy="9" r="1" fill="white" stroke="none" />
+                        <circle cx="15" cy="9" r="1" fill="white" stroke="none" />
+                    </svg>
+                </div>
+                <span class="sidebar-logo-text">Derma<span>Scan</span></span>
+            </a>
+            <a href="/dashboard" class="nav-item">
+                <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                    </svg></div>
+                <span>Dashboard</span>
+            </a>
+            <nav class="sidebar-nav">
+                <a href="/detection" class="nav-item" id="navDetection">
+                    <div class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                    </div>
+                    <span>Upload Detection</span>
+                </a>
+
+                <a href="/url-detection" class="nav-item active" id="navUrlDetection">
+                    <div class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                    </div>
+                    <span>URL Detection</span>
+                </a>
+
+                <a href="/history" class="nav-item" id="navHistory">
+                    <div class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                    </div>
+                    <span>History</span>
+                </a>
+
+                <a href="/disease-library" class="nav-item" id="navDiseaseLibrary">
+                    <div class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
+                    </div>
+                    <span>Disease Library</span>
+                </a>
+
+                <div class="logout-item">
+                    <a href="#" class="nav-item" id="logoutBtn">
+                        <div class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+                        </div>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <div class="page-badge">
+                    <span class="live-dot"></span>
+                    URL Based · Remote Image Analysis · BiT Model
+                </div>
+                <h1 class="page-title">URL <em>Detection</em></h1>
+                <p class="page-desc">Paste an image URL to analyze skin conditions from anywhere on the web</p>
+            </div>
+
+            <div class="detection-grid">
+                <!-- LEFT: URL SECTION -->
+                <div class="url-card">
+                    <div class="card-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                        Image URL
+                    </div>
+
+                    <div class="url-input-group">
+                        <label class="url-label">🔗 Paste image URL here</label>
+                        <input type="url" class="url-input" id="imageUrl"
+                            placeholder="https://example.com/skin-image.jpg">
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-primary" id="analyzeBtn" onclick="analyzeUrl()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            Analyze URL
+                        </button>
+                        <button class="btn-secondary" id="clearBtn" onclick="clearAll()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                            Clear
+                        </button>
+                    </div>
+
+                    <div class="preview-container" id="previewContainer"></div>
+
+                    <!-- Sample URLs -->
+                    <div class="sample-urls">
+                        <div class="sample-title">📋 Sample Test URLs (Click to try)</div>
+                        <div class="sample-list">
+                            <button class="sample-badge"
+                                onclick="setSampleUrl('data:image/jpeg;base64,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')">Acne
+                                Sample</button>
+                            <button class="sample-badge"
+                                onclick="setSampleUrl('data:image/jpeg;base64,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')">Skin
+                                Sample 1</button>
+                            <button class="sample-badge"
+                                onclick="setSampleUrl('data:image/jpeg;base64,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')">Eczema
+                                Sample</button>
+                        </div>
+                    </div>
+
+                    <!-- Tips -->
+                    <div class="info-card" style="margin-top: 1rem;">
+                        <div class="info-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 16v-4M12 8h.01" />
+                            </svg>
+                            Supported URLs
+                        </div>
+                        <div class="info-text">
+                            • Any direct image URL (JPG, PNG, WEBP)<br>
+                            • Publicly accessible images only<br>
+                            • Images from Google Drive/Dropbox (direct links)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: RESULTS SECTION -->
+                <div class="results-card" id="resultsCard">
+                    <div class="card-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
+                        Analysis Results & Visualizations
+                    </div>
+                    <div id="resultsContent">
+                        <div class="results-placeholder">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+                                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                                <circle cx="9" cy="9" r="1" />
+                                <circle cx="15" cy="9" r="1" />
+                            </svg>
+                            <p>Paste a URL and click Analyze to see results</p>
+                            <small style="color: var(--text-light);">Powered by Google BiT Model · 31 Disease
+                                Classes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentUrl = null;
+        let barChart = null;
+        let doughnutChart = null;
+
+        // Get session token
+        function getSessionToken() {
+            return localStorage.getItem('session_token');
+        }
+
+        // Set active page based on current URL
+        function setActivePage() {
+            const currentPath = window.location.pathname;
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            if (currentPath === '/detection' || currentPath === '/detection/') {
+                document.getElementById('navDetection')?.classList.add('active');
+            } else if (currentPath === '/url-detection' || currentPath === '/url-detection/') {
+                document.getElementById('navUrlDetection')?.classList.add('active');
+            } else if (currentPath === '/history' || currentPath === '/history/') {
+                document.getElementById('navHistory')?.classList.add('active');
+            } else if (currentPath === '/disease-library' || currentPath === '/disease-library/') {
+                document.getElementById('navDiseaseLibrary')?.classList.add('active');
+            } else if (currentPath === '/report' || currentPath === '/report/') {
+                document.getElementById('navReports')?.classList.add('active');
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const sessionToken = getSessionToken();
+
+            if (sessionToken) {
+                await fetch('/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_token: sessionToken })
+                });
+            }
+
+            localStorage.removeItem('session_token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        });
+
+        async function analyzeUrl() {
+            const url = document.getElementById('imageUrl').value.trim();
+            if (!url) {
+                showError('Please enter an image URL');
+                return;
+            }
+
+            try {
+                new URL(url);
+            } catch (e) {
+                showError('Please enter a valid URL (include http:// or https://)');
+                return;
+            }
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<div style="width:20px;height:20px;border:2px solid white;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;"></div> Analyzing...';
+
+            showLoading();
+            currentUrl = url;
+
+            document.getElementById('previewContainer').innerHTML = `
+                <img src="${url}" class="preview-image" alt="Preview" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300?text=Invalid+Image+URL'">
+            `;
+
+            try {
+                const sessionToken = getSessionToken();
+                const headers = { 'Content-Type': 'application/json' };
+                if (sessionToken) {
+                    headers['X-Session-Token'] = sessionToken;
+                }
+
+                const response = await fetch('/predict_url', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.result);
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Analyze URL';
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="spinner">
+                    <div class="spinner-circle"></div>
+                    <p>Analyzing image with BiT model...</p>
+                    <small style="color: var(--text-light);">Processing URL image</small>
+                </div>
+            `;
+        }
+
+        function displayResults(result) {
+            const confidence = result.confidence;
+            let confidenceClass = 'confidence-low';
+            let confidenceLevel = 'Low Confidence';
+
+            if (confidence > 70) {
+                confidenceClass = 'confidence-high';
+                confidenceLevel = 'High Confidence';
+            } else if (confidence > 40) {
+                confidenceClass = 'confidence-medium';
+                confidenceLevel = 'Medium Confidence';
+            }
+
+            const labels = result.top5_predictions.map(p => {
+                let name = p.label;
+                return name.length > 15 ? name.substring(0, 12) + '...' : name;
+            });
+            const percentages = result.top5_predictions.map(p => p.confidence);
+            const colors = ['#1F8C68', '#3DAF87', '#8DD4B8', '#E8956E', '#F9CFBA'];
+
+            let top5Html = '';
+            result.top5_predictions.forEach((pred, index) => {
+                const medal = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : '📊'));
+                top5Html += `
+                    <li class="top5-item">
+                        <span class="top5-name">${medal} ${escapeHtml(pred.label)}</span>
+                        <span class="top5-confidence">${pred.confidence}%</span>
+                    </li>
+                `;
+            });
+
+            const html = `
+                <div class="result-primary">
+                    <div class="result-label">PRIMARY DIAGNOSIS</div>
+                    <div class="result-diagnosis">${escapeHtml(result.primary_diagnosis)}</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${result.confidence}%"></div>
+                    </div>
+                    <div class="confidence-text">
+                        <span class="${confidenceClass}" style="padding:4px 12px;border-radius:20px;">${confidenceLevel}: ${result.confidence}%</span>
+                    </div>
+                </div>
+                
+                <div class="viz-grid">
+                    <div class="viz-card">
+                        <div class="viz-title">📊 Top 5 Confidence Bar Chart</div>
+                        <div class="chart-container">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="viz-card">
+                        <div class="viz-title">🥧 Confidence Distribution</div>
+                        <div class="chart-container">
+                            <canvas id="doughnutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1rem;">
+                    <div style="font-weight: 600; margin-bottom: 0.75rem;">🏆 Top 5 Predictions</div>
+                    <ul class="top5-list">
+                        ${top5Html}
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                        Medical Disclaimer
+                    </div>
+                    <div class="info-text">
+                        This is an AI-powered prediction based on ${result.num_classes} skin disease classes. 
+                        Results are for educational purposes only. Please consult a qualified dermatologist 
+                        for proper diagnosis and treatment.
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultsContent').innerHTML = html;
+
+            setTimeout(() => {
+                createBarChart(labels, percentages, colors);
+                createDoughnutChart(labels, percentages, colors);
+            }, 100);
+        }
+
+        function createBarChart(labels, data, colors) {
+            const ctx = document.getElementById('barChart')?.getContext('2d');
+            if (!ctx) return;
+            if (barChart) barChart.destroy();
+
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Confidence (%)',
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 8,
+                        barPercentage: 0.7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (ctx) => `${ctx.raw}% confidence` } }
+                    },
+                    scales: {
+                        y: { max: 100, title: { display: true, text: 'Confidence %', font: { size: 10 } }, ticks: { font: { size: 9 } } },
+                        x: { ticks: { font: { size: 9, weight: 'bold' }, rotation: 15 } }
+                    }
+                }
+            });
+        }
+
+        function createDoughnutChart(labels, data, colors) {
+            const ctx = document.getElementById('doughnutChart')?.getContext('2d');
+            if (!ctx) return;
+            if (doughnutChart) doughnutChart.destroy();
+
+            doughnutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 8 }, boxWidth: 10 } },
+                        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw}%` } }
+                    },
+                    cutout: '50%'
+                }
+            });
+        }
+
+        function showError(message) {
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="alert alert-error">
+                    <strong>⚠️ Error:</strong> ${escapeHtml(message)}
+                    <br><small>Please check the URL and try again. Make sure the image is publicly accessible.</small>
+                </div>
+            `;
+        }
+
+        function setSampleUrl(url) {
+            document.getElementById('imageUrl').value = url;
+            analyzeUrl();
+        }
+
+        function clearAll() {
+            document.getElementById('imageUrl').value = '';
+            document.getElementById('previewContainer').innerHTML = '';
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="results-placeholder">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/></svg>
+                    <p>Paste a URL and click Analyze to see results</p>
+                    <small style="color: var(--text-light);">Powered by Google BiT Model · 31 Disease Classes</small>
+                </div>
+            `;
+            currentUrl = null;
+            if (barChart) { barChart.destroy(); barChart = null; }
+            if (doughnutChart) { doughnutChart.destroy(); doughnutChart = null; }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Call on page load
+        setActivePage();
+    </script>
+
+</body>
+
+</html>
